@@ -24,6 +24,8 @@
         Edit(Double-click node)
       </button>
       <button @click="$refs.chart.save()">Save</button>
+      <button :disabled="!isNodeSelected" @click="cloneSelectedNode">Clone</button>
+      {{ isNodeSelected }}
     </div>
     <flowchart
       :nodes="nodes"
@@ -139,7 +141,13 @@ export default {
       connectionForm: { target: null, operation: null },
       nodeDialogVisible: false,
       connectionDialogVisible: false,
+      selectedNode: null,
     };
+  },
+  computed: {
+    isNodeSelected() {
+      return this.selectedNode !== null;
+    }
   },
   async mounted() {},
   methods: {
@@ -154,7 +162,12 @@ export default {
       });
     },
     handleSelect(nodes) {
-      // console.log(nodes);
+      if (nodes.length <= 0 || nodes.length > 1) {
+        this.selectedNode = null;
+        return;
+      }
+      
+      this.selectedNode = nodes[0];
     },
     handleSelectConnection(connections) {
       // console.log(connections);
@@ -174,6 +187,18 @@ export default {
       this.connectionForm.target = connection;
       this.connectionDialogVisible = true;
     },
+    cloneSelectedNode() {
+      if (this.selectedNode === null) {
+        return;
+      }
+      
+      const newNode = JSON.parse(JSON.stringify(this.selectedNode));
+      newNode.id = Date.now();
+      newNode.x = newNode.x + 50;
+      newNode.y = newNode.y + 30;
+      this.selectedNode = null;
+      this.nodes.push(newNode);
+    }
   },
 };
 </script>
