@@ -7,7 +7,7 @@
     <div id="toolbar">
       <button
         @click="
-          $refs.chart.add({
+          nodes.push({
             id: +new Date(),
             x: 10,
             y: 10,
@@ -37,6 +37,9 @@
       @save="handleChartSave"
       @select="handleSelect"
       @selectconnection="handleSelectConnection"
+      @movediff="moved"
+      @nodesdragged="nodesPositionChanged"
+      @delete="removeNode"
       ref="chart"
     >
     </flowchart>
@@ -146,6 +149,7 @@ export default {
       connectionForm: { target: null, operation: null },
       nodeDialogVisible: false,
       connectionDialogVisible: false,
+      move: { x: 0, y: 0 },
     };
   },
   async mounted() {},
@@ -167,6 +171,13 @@ export default {
       // console.log(connections);
     },
     async handleChartSave(nodes, connections) {
+      console.log("handleChartSave");
+      this.nodes = JSON.parse(JSON.stringify(nodes));
+      this.nodes.forEach(saveNode => {
+        saveNode.x = this.move.x >= 0 ? saveNode.x + this.move.x : saveNode.x - Math.abs(this.move.x);
+        saveNode.y = this.move.y >=0 ? saveNode.y - this.move.y : saveNode.y + Math.abs(this.move.y);
+      });
+      this.connections = JSON.parse(JSON.stringify(connections));
       // axios.post(url, {nodes, connection}).then(resp => {
       //   this.nodes = resp.nodes;
       //   this.connections = resp.connections;
@@ -181,6 +192,22 @@ export default {
       this.connectionForm.target = connection;
       this.connectionDialogVisible = true;
     },
+    moved(move) {
+      this.move = move;
+      console.log("diff", move.x, move.y);
+    },
+    nodesPositionChanged(nodes) {
+      console.log("nodesPositionChanged", nodes);
+      nodes.forEach(movedNode => {
+        const node = this.nodes.find(x => x.id === movedNode.id);
+        node.x = this.move.x >= 0 ? movedNode.x + this.move.x : movedNode.x - Math.abs(this.move.x);
+        node.y = this.move.y >=0 ? movedNode.y - this.move.y : movedNode.y + Math.abs(this.move.y);
+      });
+    },
+    removeNode(node) {
+      const nodeIndex = this.nodes.findIndex(x => x.id === node.id);
+      this.nodes.splice(nodeIndex, 1);
+    }
   },
 };
 </script>
